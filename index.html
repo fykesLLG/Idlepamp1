@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Idle Mamp 1</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0a0f0a;
+    font-family:'Segoe UI',system-ui,-apple-system,'Noto Sans SC',sans-serif;
+    color:#e6edf3;user-select:none}
+
+  #game{display:flex;width:100vw;height:100vh;overflow:hidden}
+
+  #stage{flex:1;position:relative;min-width:0;background:#0a0f0a;overflow:hidden}
+  #cv{display:block;position:absolute;inset:0;touch-action:none}
+
+  /* ============ ПАНЕЛЬ ============ */
+  #panel{width:370px;flex-shrink:0;background:#111813;border-left:1px solid #253029;
+    display:flex;flex-direction:column;min-height:0;transition:.35s}
+  body.vip #panel{border-left-color:#c9a227;
+    box-shadow:inset 4px 0 30px -14px #c9a22799}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:10px 12px;border-bottom:1px solid #253029;background:#0e1510;
+    transition:.35s}
+  body.vip .topbar{background:linear-gradient(90deg,#1f1a08,#0e1510 70%)}
+
+  .coinbox{display:flex;align-items:center;gap:9px;min-width:0}
+  .coin-icon{font-size:26px;line-height:1;filter:drop-shadow(0 0 6px #ffd75e88)}
+  #coins{font-size:20px;font-weight:800;color:#ffd75e;letter-spacing:.3px;
+    display:flex;align-items:center;gap:6px}
+  body.vip #coins{color:#ffe27a;text-shadow:0 0 14px #ffd75eaa}
+  #cps{font-size:11px;color:#7d8590;font-weight:600}
+  .vipbadge{font-size:10px;font-weight:900;padding:2px 7px;border-radius:6px;
+    background:linear-gradient(180deg,#ffd75e,#c9a227);color:#3a2a00;
+    letter-spacing:.5px;display:none;animation:glow 1.6s infinite alternate}
+  @keyframes glow{from{box-shadow:0 0 4px #ffd75e}
+                  to{box-shadow:0 0 14px #ffd75e}}
+  body.vip .vipbadge{display:inline-block}
+
+  .btns{display:flex;gap:6px}
+  .btns button{width:38px;height:38px;border-radius:10px;border:1px solid #253029;
+    background:#1a231c;color:#e6edf3;font-size:17px;cursor:pointer;transition:.15s;
+    display:flex;align-items:center;justify-content:center;font-weight:700;padding:0}
+  .btns button:hover{background:#253029;border-color:#3a4a3e}
+  .btns button:active{transform:scale(.93)}
+  .btns button.on{background:#8b5cf6;border-color:#a78bfa;color:#fff}
+  body.vip .btns button.on{background:#c9a227;border-color:#ffd75e;color:#2a1f00}
+
+  .tabs{display:flex;gap:5px;padding:8px 8px 0;background:#0e1510}
+  .tabs button{flex:1;padding:9px 2px;border-radius:10px 10px 0 0;
+    border:1px solid transparent;border-bottom:none;background:#0e1510;color:#7d8590;
+    font-size:12px;font-weight:800;cursor:pointer;transition:.15s;font-family:inherit;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tabs button:hover{color:#e6edf3;background:#16201a}
+  .tabs button.active{background:#1a231c;color:#3fb950;border-color:#253029}
+  body.vip .tabs button.active{color:#ffd75e}
+
+  #content{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px;display:flex;
+    flex-direction:column;gap:7px}
+  #content::-webkit-scrollbar{width:7px}
+  #content::-webkit-scrollbar-thumb{background:#253029;border-radius:4px}
+  #content::-webkit-scrollbar-track{background:transparent}
+
+  .section{display:none;flex-direction:column;gap:7px}
+  .section.active{display:flex}
+
+  .hintbar{font-size:11px;padding:7px 11px;border-radius:9px;background:#16201a;
+    border:1px solid #1f2a23;color:#8b949e;line-height:1.5}
+  .hintbar b{color:#3fb950}
+  body.vip .hintbar b{color:#ffd75e}
+
+  .item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;
+    background:#16201a;border:1px solid #1f2a23;transition:.15s}
+  .item.can{border-color:#2ea04355;background:#14241a}
+  .item.can:hover{background:#1a2e20;border-color:#2ea043}
+  .item.locked{opacity:.55}
+  .item.vipitem{border-color:#c9a22755;background:#1a1708}
+  .item.vipitem.can{border-color:#ffd75e;background:#231f0a;
+    box-shadow:0 0 18px -4px #ffd75e55}
+  .item.shake{animation:shake .32s}
+  @keyframes shake{0%,100%{transform:translateX(0)}
+                   25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+  .item .ic{font-size:26px;width:40px;height:40px;display:flex;align-items:center;
+    justify-content:center;background:#0a0f0a;border-radius:9px;flex-shrink:0;
+    border:1px solid #1f2a23}
+  .item .mid{flex:1;min-width:0}
+  .item .nm{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+  .cnt{font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;
+    background:#253029;color:#3fb950}
+  body.vip .cnt{background:#3a2f0a;color:#ffd75e}
+  .item .st{font-size:11px;color:#7d8590;margin-top:3px;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis}
+  .item .st b{color:#3fb950}
+  body.vip .item .st b{color:#7ee787}
+
+  .buy{min-width:82px;padding:8px 9px;border-radius:9px;border:none;cursor:pointer;
+    font-size:13px;font-weight:800;background:#1f2a23;color:#7d8590;transition:.15s;
+    flex-shrink:0;font-family:inherit}
+  .buy.afford{background:linear-gradient(180deg,#2ea043,#1e7a33);color:#fff;
+    box-shadow:0 2px 0 #0d3f1a}
+  .buy.afford:hover{filter:brightness(1.15)}
+  .buy.afford:active{transform:translateY(2px);box-shadow:none}
+  .buy.vip{background:linear-gradient(180deg,#ffd75e,#c9a227);color:#3a2a00;
+    box-shadow:0 2px 0 #7a5f00}
+  .buy.vip:hover{filter:brightness(1.1)}
+  .buy:disabled{opacity:.6;cursor:default;filter:none}
+
+  .footer{padding:9px;border-top:1px solid #253029;display:flex;gap:8px}
+  .footer button{flex:1;padding:9px;border-radius:9px;border:1px solid #253029;
+    background:#1a231c;color:#7d8590;font-size:12px;font-weight:700;cursor:pointer;
+    transition:.15s;font-family:inherit}
+  .footer button:hover{background:#253029;color:#e6edf3}
+  .footer button.danger:hover{background:#5c1a1a;color:#ff7b72;border-color:#8b2c2c}
+
+  /* ============ ОВЕРЛЕИ ============ */
+  .overlay{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:18px;padding:20px;
+    background:radial-gradient(circle at 50% 35%,#14261a,#050a07 75%);
+    transition:opacity .4s,visibility .4s;overflow-y:auto}
+  .overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
+
+  .overlay h1{font-size:clamp(34px,7vw,62px);font-weight:900;letter-spacing:1px;
+    background:linear-gradient(180deg,#a8f0a8,#2ea043 60%,#1a7f37);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-align:center;line-height:1.05;filter:drop-shadow(0 4px 14px #2ea04355)}
+  .overlay .sub{font-size:14px;color:#7d8590;letter-spacing:3px;text-transform:uppercase}
+  .overlay .emojis{font-size:40px;letter-spacing:10px;filter:drop-shadow(0 0 18px #0008)}
+
+  .langs{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .langs button{padding:11px 20px;border-radius:12px;border:1px solid #253029;
+    background:#111813cc;color:#e6edf3;font-size:15px;font-weight:700;cursor:pointer;
+    transition:.18s;font-family:inherit;backdrop-filter:blur(6px)}
+  .langs button:hover{border-color:#2ea043;background:#14241a}
+  .langs button.sel{background:#2ea043;border-color:#3fb950;color:#fff;
+    box-shadow:0 0 22px #2ea04366}
+
+  #playBtn{padding:16px 62px;border-radius:16px;border:none;cursor:pointer;
+    font-size:21px;font-weight:900;letter-spacing:1px;font-family:inherit;
+    background:linear-gradient(180deg,#3fb950,#1e7a33);color:#fff;
+    box-shadow:0 5px 0 #0d3f1a,0 0 34px #2ea04366;transition:.12s}
+  #playBtn:hover{filter:brightness(1.12)}
+  #playBtn:active{transform:translateY(4px);box-shadow:0 1px 0 #0d3f1a}
+  .hint{font-size:12px;color:#57606a;text-align:center;max-width:380px;
+    line-height:1.6;padding:0 16px}
+
+  /* ============ МОДАЛКИ ============ */
+  .modal-bg{position:fixed;inset:0;z-index:60;display:none;align-items:center;
+    justify-content:center;background:#000c;backdrop-filter:blur(6px);padding:16px;
+    overflow-y:auto}
+  .modal-bg.show{display:flex}
+  .modal{background:#111813;border:1px solid #253029;border-radius:18px;
+    padding:26px 28px;text-align:center;max-width:440px;width:100%;
+    box-shadow:0 24px 60px #000c;animation:pop .32s cubic-bezier(.34,1.56,.64,1);
+    position:relative}
+  @keyframes pop{from{transform:scale(.86);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal.gold{border-color:#c9a227;
+    box-shadow:0 24px 70px #000c,0 0 60px #c9a22744,inset 0 0 40px -20px #ffd75e33}
+  .modal h2{font-size:21px;margin-bottom:8px;color:#ffd75e}
+  .modal p{font-size:14px;color:#8b949e;margin-bottom:6px;line-height:1.55}
+  .modal .big{font-size:32px;font-weight:900;color:#3fb950;margin:14px 0 20px}
+  .modal button{width:100%;padding:13px;border-radius:11px;border:none;cursor:pointer;
+    background:linear-gradient(180deg,#3fb950,#1e7a33);color:#fff;font-size:16px;
+    font-weight:800;font-family:inherit;box-shadow:0 4px 0 #0d3f1a;transition:.12s;
+    margin-top:8px}
+  .modal button:active{transform:translateY(3px);box-shadow:none}
+  .modal button.gold{background:linear-gradient(180deg,#ffd75e,#c9a227);color:#3a2a00;
+    box-shadow:0 4px 0 #7a5f00}
+  .modal button.ghost{background:#1a231c;color:#c9d1d9;box-shadow:0 4px 0 #0c120e;
+    border:1px solid #253029}
+
+  .crypto-row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:14px 0}
+  .crypto-row span{font-size:11px;font-weight:800;padding:5px 9px;border-radius:8px;
+    background:#1a231c;border:1px solid #253029;color:#c9d1d9}
+  body.vip .crypto-row span{border-color:#c9a22744}
+  .price{font-size:15px;font-weight:900;color:#ffd75e;margin:6px 0 4px}
+  .price b{font-size:24px}
+  .codeinput{width:100%;padding:14px 14px;border-radius:11px;border:1px solid #253029;
+    background:#0a0f0a;color:#e6edf3;font-size:18px;font-family:inherit;font-weight:700;
+    letter-spacing:4px;text-align:center;outline:none;transition:.15s;margin-top:12px}
+  .codeinput:focus{border-color:#c9a227;box-shadow:0 0 0 3px #c9a22733}
+  .msg{font-size:13px;font-weight:700;margin-top:10px;min-height:18px}
+  .msg.err{color:#ff7b72}
+  .msg.ok{color:#3fb950}
+
+  .bonuslist{text-align:left;margin:14px 0 4px;display:flex;flex-direction:column;gap:6px}
+  .bonuslist div{font-size:13px;color:#c9d1d9;display:flex;align-items:center;
+    gap:9px;background:#16201a;padding:9px 12px;border-radius:9px;
+    border:1px solid #1f2a23}
+  .bonuslist div .em{font-size:17px;line-height:1}
+  .bonuslist div b{color:#ffd75e}
+
+  .close-x{position:absolute;top:12px;right:14px;width:30px;height:30px;border-radius:50%;
+    border:none;background:#1a231c;color:#7d8590;font-size:16px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;padding:0;margin:0;
+    box-shadow:none;transition:.15s}
+  .close-x:hover{background:#253029;color:#fff}
+
+  /* ============ МОБИЛЬНЫЙ ============ */
+  @media (max-width:860px){
+    #game{flex-direction:column}
+    #panel{width:100%;height:52%;border-left:none;border-top:1px solid #253029}
+    #stage{height:48%}
+    .topbar{padding:7px 10px}
+    #coins{font-size:17px}
+    .item{padding:7px 9px}
+    .item .ic{width:34px;height:34px;font-size:22px}
+    .buy{min-width:68px;padding:7px 8px;font-size:12px}
+    .footer button{padding:7px;font-size:11px}
+    .tabs button{font-size:11px;padding:8px 2px}
+  }
+</style>
+</head>
+<body>
+
+<div id="game">
+  <div id="stage"><canvas id="cv"></canvas></div>
+
+  <div id="panel">
+    <div class="topbar">
+      <div class="coinbox">
+        <div class="coin-icon">🪙</div>
+        <div>
+          <div id="coins">0</div>
+          <div id="cps">0 /сек</div>
+        </div>
+      </div>
+      <div class="btns">
+        <button id="btnSleep" title="Sleep">😴</button>
+        <button id="btnFs" title="Fullscreen">⛶</button>
+        <button id="btnLang" title="Language">RU</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button data-tab="build" class="active" id="tabBuild">🏗️</button>
+      <button data-tab="work" id="tabWork">👷</button>
+      <button data-tab="vip" id="tabVip">👑</button>
+    </div>
+
+    <div id="content">
+      <div class="section active" id="secBuild"></div>
+      <div class="section" id="secWork"></div>
+      <div class="section" id="secVip"></div>
+    </div>
+
+    <div class="footer">
+      <button id="btnReset" class="danger">Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- СТАРТ -->
+<div id="startScreen" class="overlay">
+  <div class="emojis">🌾 🏠 🐄 🏭</div>
+  <h1>Idle Mamp 1</h1>
+  <div class="sub" id="startSub">farm tycoon</div>
+  <div class="langs" id="langButtons">
+    <button data-lang="ru">🇷🇺 Русский</button>
+    <button data-lang="en">🇬🇧 English</button>
+    <button data-lang="zh">🇨🇳 中文</button>
+  </div>
+  <button id="playBtn">▶</button>
+  <div class="hint" id="startHint"></div>
+</div>
+
+<!-- ОФФЛАЙН -->
+<div id="offlineModal" class="modal-bg">
+  <div class="modal">
+    <h2 id="offTitle">Пока вас не было</h2>
+    <p id="offDesc">Ваша ферма заработала:</p>
+    <div class="big" id="offAmount">0 🪙</div>
+    <button id="offBtn">Забрать</button>
+  </div>
+</div>
+
+<!-- VIP -->
+<div id="vipModal" class="modal-bg">
+  <div class="modal gold">
+    <button class="close-x" id="vipClose">✕</button>
+    <h2 id="vipTitle">👑 VIP Статус</h2>
+    <p id="vipDesc"></p>
+    <div class="price" id="vipPrice"></div>
+    <div class="crypto-row">
+      <span>₿ BTC</span><span>Ł LTC</span><span>💵 USDT</span>
+      <span>💎 TON</span><span>Ξ ETH</span><span>◎ SOL</span>
+    </div>
+    <button class="gold" id="vipOpen">✈️ <span id="vipOpenTxt">Открыть Telegram</span></button>
+    <input class="codeinput" id="vipCode" maxlength="12" placeholder="– – – – – –"
+      inputmode="numeric" autocomplete="off">
+    <button id="vipActivate">🔓 <span id="vipActTxt">Активировать</span></button>
+    <div class="msg" id="vipMsg"></div>
+  </div>
+</div>
+
+<!-- VIP OK -->
+<div id="vipOkModal" class="modal-bg">
+  <div class="modal gold">
+    <div style="font-size:68px;line-height:1;margin-bottom:4px;
+      filter:drop-shadow(0 0 24px #ffd75e88)">👑</div>
+    <h2 id="vipOkTitle">VIP АКТИВИРОВАН!</h2>
+    <p id="vipOkDesc"></p>
+    <div class="bonuslist" id="vipOkList"></div>
+    <button class="gold" id="vipOkBtn">Отлично!</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* =========================================================
+   IDLE MAMP 1  v4 — workers AI + slots + super VIP
+   ========================================================= */
+
+/* ================= I18N ================= */
+const I18N = {
+  ru:{
+    play:'ИГРАТЬ', sub:'ферма · тайкун',
+    hint:'Строй здания в свободные слоты, нанимай рабочих!<br>Пока спишь — доход ×2.<br>Купи VIP за 1$ и получи ×5 доход + бонусы!',
+    coins:'Монеты', perSec:'/сек', reset:'Сбросить прогресс',
+    resetConfirm:'Точно сбросить весь прогресс?',
+    sleep:'Спать', wake:'Проснуться',
+    offlineTitle:'Пока вас не было', offlineDesc:'Ваша ферма заработала:',
+    collect:'Забрать', lvl:'Ур.', hire:'Нанять', owned:'Нанято',
+    tabBuild:'Постройки', tabWork:'Рабочие', tabVip:'VIP',
+    freeSlots:'Свободных слотов', noSlots:'Все слоты заняты!',
+    placed:'Размещено', each:'за шт',
+    vipTitle:'👑 VIP Статус',
+    vipDesc:'Оплатите 1$ в Crypto Bot и получите код активации.',
+    vipPrice:'Цена: <b>1$</b>',
+    vipOpen:'Открыть Telegram', vipAct:'Активировать',
+    vipCodePh:'– – – – – –',
+    vipErr:'❌ Неверный код. Попробуйте снова.',
+    vipAlready:'✅ VIP уже активирован!',
+    vipOkTitle:'VIP АКТИВИРОВАН!', vipOkDesc:'Ваша ферма вышла на новый уровень:',
+    vipOkBtn:'Отлично!',
+    b1:'💰 Доход всех построек ×5',
+    b2:'👆 Сила клика ×10',
+    b3:'😴 Сон даёт ×3 вместо ×2',
+    b4:'💤 Офлайн-доход ×3',
+    b5:'🎁 +5 рабочих каждого типа мгновенно',
+    b6:'👑 Золотой статус и корона',
+    b:{house:'Дом',farm:'Ферма',mill:'Мельница',bakery:'Пекарня',
+       market:'Рынок',well:'Колодец',workshop:'Мастерская',tower:'Башня'},
+    w:{farmhand:'Батрак',herder:'Пастух',driver:'Водитель',
+       baker:'Пекарь',trader:'Торговец',builder:'Строитель',overseer:'Управляющий'}
+  },
+  en:{
+    play:'PLAY', sub:'farm · tycoon',
+    hint:'Build in free slots, hire workers!<br>Sleep doubles income.<br>Buy VIP for $1 — ×5 income + bonuses!',
+    coins:'Coins', perSec:'/sec', reset:'Reset progress',
+    resetConfirm:'Really reset all progress?',
+    sleep:'Sleep', wake:'Wake up',
+    offlineTitle:'While you were away', offlineDesc:'Your farm earned:',
+    collect:'Collect', lvl:'Lv.', hire:'Hire', owned:'Hired',
+    tabBuild:'Buildings', tabWork:'Workers', tabVip:'VIP',
+    freeSlots:'Free slots', noSlots:'All slots occupied!',
+    placed:'Placed', each:'each',
+    vipTitle:'👑 VIP Status',
+    vipDesc:'Pay $1 in Crypto Bot and get an activation code.',
+    vipPrice:'Price: <b>$1</b>',
+    vipOpen:'Open Telegram', vipAct:'Activate',
+    vipCodePh:'– – – – – –',
+    vipErr:'❌ Wrong code. Try again.',
+    vipAlready:'✅ VIP already activated!',
+    vipOkTitle:'VIP ACTIVATED!', vipOkDesc:'Your farm reached a new level:',
+    vipOkBtn:'Awesome!',
+    b1:'💰 All building income ×5',
+    b2:'👆 Click power ×10',
+    b3:'😴 Sleep gives ×3 instead of ×2',
+    b4:'💤 Offline earnings ×3',
+    b5:'🎁 +5 workers of each type instantly',
+    b6:'👑 Golden status and crown',
+    b:{house:'House',farm:'Farm',mill:'Mill',bakery:'Bakery',
+       market:'Market',well:'Well',workshop:'Workshop',tower:'Tower'},
+    w:{farmhand:'Farmhand',herder:'Herder',driver:'Driver',
+       baker:'Baker',trader:'Trader',builder:'Builder',overseer:'Overseer'}
+  },
+  zh:{
+    play:'开始游戏', sub:'农场 · 模拟经营',
+    hint:'在空位建造，雇佣工人！<br>睡觉时收益 ×2。<br>花 1 美元购买 VIP — 收益 ×5 + 奖励！',
+    coins:'金币', perSec:'/秒', reset:'重置进度',
+    resetConfirm:'确定要重置所有进度吗？',
+    sleep:'睡觉', wake:'醒来',
+    offlineTitle:'你不在的时候', offlineDesc:'你的农场赚到了：',
+    collect:'领取', lvl:'等级', hire:'雇佣', owned:'已雇佣',
+    tabBuild:'建筑', tabWork:'工人', tabVip:'VIP',
+    freeSlots:'空余位置', noSlots:'所有位置已满！',
+    placed:'已放置', each:'每个',
+    vipTitle:'👑 VIP 状态',
+    vipDesc:'在 Crypto Bot 中支付 1 美元，获取激活码。',
+    vipPrice:'价格：<b>$1</b>',
+    vipOpen:'打开 Telegram', vipAct:'激活',
+    vipCodePh:'– – – – – –',
+    vipErr:'❌ 激活码错误，请重试。',
+    vipAlready:'✅ VIP 已激活！',
+    vipOkTitle:'VIP 已激活！', vipOkDesc:'你的农场达到了新高度：',
+    vipOkBtn:'太棒了！',
+    b1:'💰 所有建筑收益 ×5',
+    b2:'👆 点击力量 ×10',
+    b3:'😴 睡眠为 ×3 而非 ×2',
+    b4:'💤 离线收益 ×3',
+    b5:'🎁 每种工人立即 +5',
+    b6:'👑 金色状态和王冠',
+    b:{house:'房屋',farm:'农场',mill:'磨坊',bakery:'面包房',
+       market:'市场',well:'水井',workshop:'工坊',tower:'高塔'},
+    w:{farmhand:'农夫',herder:'牧人',driver:'司机',
+       baker:'面包师',trader:'商人',builder:'建筑工',overseer:'总管'}
+  }
+};
+
+let LANG = 'ru';
+const T  = k => (I18N[LANG] && I18N[LANG][k]) || k;
+const TB = id => (I18N[LANG].b && I18N[LANG].b[id]) || id;
+const TW = id => (I18N[LANG].w && I18N[LANG].w[id]) || id;
+
+/* ================= МИР ================= */
+const WORLD_W = 840, WORLD_H = 580;
+const ROAD_CY = 285, ROAD_H = 50;
+const ROAD_TOP = ROAD_CY - ROAD_H/2;
+const ROAD_BOT = ROAD_CY + ROAD_H/2;
+
+/* Слоты 4 колонки × 4 ряда = 16 мест для зданий */
+const SLOT_W = 56;
+const SLOT_LAYOUT = [
+  // Верхняя часть
+  {x:118, y:95}, {x:312, y:95}, {x:506, y:95}, {x:700, y:95},
+  {x:118, y:185},{x:312, y:185},{x:506, y:185},{x:700, y:185},
+  // Нижняя часть
+  {x:118, y:390},{x:312, y:390},{x:506, y:390},{x:700, y:390},
+  {x:118, y:480},{x:312, y:480},{x:506, y:480},{x:700, y:480},
+];
+
+/* ================= ЗДАНИЯ ================= */
+const BUILDINGS = [
+  {id:'house',    icon:'🏠', cost:25,        income:0.7,   color:'#b03a2e'},
+  {id:'farm',     icon:'🌾', cost:110,       income:3.8,   color:'#1e8449'},
+  {id:'mill',     icon:'🏭', cost:1300,      income:36,    color:'#7d6247'},
+  {id:'bakery',   icon:'🥖', cost:17000,     income:380,   color:'#ca6f1e'},
+  {id:'market',   icon:'🏪', cost:210000,    income:4000,  color:'#2471a3'},
+  {id:'well',     icon:'⛲', cost:2700000,   income:42000, color:'#148f77'},
+  {id:'workshop', icon:'🔨', cost:34000000,  income:460000,color:'#707b7c'},
+  {id:'tower',    icon:'🏛️', cost:480000000, income:5400000,color:'#7d3c98'},
+];
+const BMAP = {};
+BUILDINGS.forEach(b => BMAP[b.id] = b);
+
+/* ================= РАБОЧИЕ ================= */
+const WORKERS = [
+  {id:'farmhand', icon:'👨‍🌾', cost:45,         income:4,        color:'#6ab04c'},
+  {id:'herder',   icon:'🐄',   cost:950,        income:65,       color:'#e1b12c'},
+  {id:'driver',   icon:'🚜',   cost:16000,      income:650,      color:'#eb4d4b'},
+  {id:'baker',    icon:'🧑‍🍳', cost:210000,     income:6000,     color:'#f0932b'},
+  {id:'trader',   icon:'📦',   cost:2900000,    income:58000,    color:'#22a6b3'},
+  {id:'builder',  icon:'🏗️',   cost:44000000,   income:640000,   color:'#7d5fff'},
+  {id:'overseer', icon:'🧙',   cost:720000000,  income:9500000,  color:'#c56cf0'},
+];
+const WMAP = {};
+WORKERS.forEach(w => WMAP[w.id] = w);
+
+const SAVE_KEY = 'idle_mamp_1_v4';
+const COST_MUL = 1.16;
+const VIP_CODE = '136253';
+const VIP_LINK = 'http://t.me/send?start=IV8zJULZWnL7';
+
+/* ================= СОСТОЯНИЕ ================= */
+function freshState(){
+  return {
+    coins: 150,
+    buildings: { house: 1 },
+    workers: {},
+    vip: false,
+    lang: 'ru',
+    sleeping: false,
+    totalEarned: 0,
+    lastSave: Date.now()
+  };
+}
+let state = freshState();
+
+function save(){
+  try{
+    state.lastSave = Date.now();
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  }catch(e){}
+}
+function load(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return false;
+    const d = JSON.parse(raw);
+    state = Object.assign(freshState(), d);
+    state.buildings = Object.assign({house:1}, d.buildings || {});
+    state.workers   = Object.assign({},       d.workers   || {});
+    state.vip = !!d.vip;
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ================= РАЗМЕЩЕНИЕ ЗДАНИЙ ================= */
+function placedBuildings(){
+  const out = [];
+  let idx = 0;
+  for(const b of BUILDINGS){
+    const cnt = state.buildings[b.id] || 0;
+    for(let i = 0; i < cnt && idx < SLOT_LAYOUT.length; i++){
+      out.push({type: b, x: SLOT_LAYOUT[idx].x, y: SLOT_LAYOUT[idx].y,
+                spotY: SLOT_LAYOUT[idx].y < ROAD_CY
+                       ? SLOT_LAYOUT[idx].y + SLOT_W/2 + 8
+                       : SLOT_LAYOUT[idx].y - SLOT_W/2 - 8,
+                idx});
+      idx++;
+    }
+  }
+  return out;
+}
+function totalPlaced(){
+  let n = 0;
+  for(const b of BUILDINGS) n += state.buildings[b.id] || 0;
+  return n;
+}
+function freeSlots(){
+  return Math.max(0, SLOT_LAYOUT.length - totalPlaced());
+}
+
+/* ================= ЭКОНОМИКА ================= */
+function baseIncome(){
+  let s = 0;
+  for(const b of BUILDINGS){
+    const c = state.buildings[b.id] || 0;
+    if(c > 0) s += b.income * c;
+  }
+  for(const w of WORKERS){
+    const c = state.workers[w.id] || 0;
+    if(c > 0) s += w.income * c;
+  }
+  return s;
+}
+function incomePerSec(){
+  let inc = baseIncome();
+  if(state.sleeping) inc *= state.vip ? 3 : 2;
+  if(state.vip)      inc *= 5;
+  return inc;
+}
+function costOfBuilding(b){
+  const c = state.buildings[b.id] || 0;
+  return Math.ceil(b.cost * Math.pow(COST_MUL, c));
+}
+function costOfWorker(w){
+  const c = state.workers[w.id] || 0;
+  return Math.ceil(w.cost * Math.pow(COST_MUL, c));
+}
+function totalOwned(){
+  let s = 0;
+  for(const b of BUILDINGS) s += state.buildings[b.id] || 0;
+  for(const w of WORKERS)   s += state.workers[w.id] || 0;
+  return s;
+}
+function clickPower(){
+  let p = 1 + totalOwned();
+  if(state.vip) p *= 10;
+  return p;
+}
+
+/* ================= ФОРМАТ ================= */
+const UNITS = ['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td'];
+function fmt(n){
+  if(!isFinite(n)) return '∞';
+  if(n < 0) return '-' + fmt(-n);
+  if(n < 1000){
+    if(n === 0) return '0';
+    if(n < 10 && n % 1 !== 0) return n.toFixed(1);
+    return Math.floor(n).toString();
+  }
+  let i = 0;
+  while(n >= 1000 && i < UNITS.length-1){ n /= 1000; i++; }
+  return n.toFixed(n < 10 ? 2 : n < 100 ? 1 : 0) + UNITS[i];
+}
+
+/* =========================================================
+   CANVAS
+   ========================================================= */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const stage = document.getElementById('stage');
+let vw=0, vh=0, dpr=1, scale=1, offX=0, offY=0;
+
+function resize(){
+  const r = stage.getBoundingClientRect();
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  vw = Math.max(1, r.width);
+  vh = Math.max(1, r.height);
+  cv.width  = Math.floor(vw * dpr);
+  cv.height = Math.floor(vh * dpr);
+  cv.style.width  = vw + 'px';
+  cv.style.height = vh + 'px';
+  scale = Math.min(vw / WORLD_W, vh / WORLD_H);
+  scale = Math.min(scale, 1.9);
+  offX = (vw - WORLD_W * scale) / 2;
+  offY = (vh - WORLD_H * scale) / 2;
+}
+window.addEventListener('resize', resize);
+
+/* ---------- земля ---------- */
+const ground = document.createElement('canvas');
+ground.width = WORLD_W;
+ground.height = WORLD_H;
+(function(){
+  const g = ground.getContext('2d');
+  const grd = g.createLinearGradient(0,0,0,WORLD_H);
+  grd.addColorStop(0,'#5fa844'); grd.addColorStop(1,'#4c8f38');
+  g.fillStyle = grd; g.fillRect(0,0,WORLD_W,WORLD_H);
+
+  for(let i=0;i<220;i++){
+    const x = Math.random()*WORLD_W, y = Math.random()*WORLD_H;
+    g.fillStyle = Math.random() > .5 ? 'rgba(255,255,255,.045)' : 'rgba(0,0,0,.05)';
+    g.beginPath(); g.arc(x,y, Math.random()*18+5, 0, Math.PI*2); g.fill();
+  }
+  for(let i=0;i<850;i++){
+    const x = Math.random()*WORLD_W, y = Math.random()*WORLD_H;
+    g.strokeStyle = 'rgba(255,255,255,.09)';
+    g.lineWidth = 1.2;
+    g.beginPath(); g.moveTo(x,y);
+    g.lineTo(x + (Math.random()-.5)*4, y - 4 - Math.random()*5);
+    g.stroke();
+  }
+  for(let i=0;i<100;i++){
+    const x = Math.random()*WORLD_W, y = Math.random()*WORLD_H;
+    g.fillStyle = ['#e8e8e8','#f4d03f','#e74c3c','#ffffff'][Math.floor(Math.random()*4)];
+    g.beginPath(); g.arc(x,y,1.7,0,Math.PI*2); g.fill();
+  }
+})();
+
+/* ---------- утилиты ---------- */
+function rrect(c,x,y,w,h,r){
+  c.beginPath();
+  c.moveTo(x+r,y);
+  c.arcTo(x+w,y,x+w,y+h,r);
+  c.arcTo(x+w,y+h,x,y+h,r);
+  c.arcTo(x,y+h,x,y,r);
+  c.arcTo(x,y,x+w,y,r);
+  c.closePath();
+}
+function shade(hex, amt){
+  const n = parseInt(hex.slice(1),16);
+  let r = (n>>16)+amt, g = ((n>>8)&255)+amt, b = (n&255)+amt;
+  r = Math.max(0,Math.min(255,r));
+  g = Math.max(0,Math.min(255,g));
+  b = Math.max(0,Math.min(255,b));
+  return '#'+((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');
+}
+
+/* ---------- частицы ---------- */
+const particles = [];
+function spawnParticle(x,y,text,color){
+  particles.push({x, y, text, color, life:1.4, max:1.4, vy:-36});
+}
+function updateParticles(dt){
+  for(let i=particles.length-1;i>=0;i--){
+    const p = particles[i];
+    p.life -= dt; p.y += p.vy * dt; p.vy *= 0.965;
+    if(p.life <= 0) particles.splice(i,1);
+  }
+}
+
+/* =========================================================
+   ИГРОК
+   ========================================================= */
+const player = {
+  x: SLOT_LAYOUT[0].x, y: SLOT_LAYOUT[0].y + 40,
+  path: [], state:'idle', timer:1.5,
+  dir: 1, anim: 0, bob: 0
+};
+function goTo(x, y){
+  player.path = [
+    { x: player.x, y: ROAD_CY },
+    { x: x,        y: ROAD_CY },
+    { x: x,        y: y        }
+  ];
+  while(player.path.length &&
+        Math.abs(player.path[0].x - player.x) < 1 &&
+        Math.abs(player.path[0].y - player.y) < 1){
+    player.path.shift();
+  }
+  player.state = player.path.length ? 'walking' : 'working';
+  player.timer = player.path.length ? 0 : 2.6;
+}
+function pickTarget(){
+  if(state.sleeping){
+    const p = placedBuildings().find(p => p.type.id === 'house');
+    if(p) goTo(p.x, p.spotY);
+    else { player.state = 'idle'; player.timer = 2; }
+    return;
+  }
+  const placed = placedBuildings();
+  if(!placed.length){ player.state='idle'; player.timer = 1.2; return; }
+  const p = placed[Math.floor(Math.random()*placed.length)];
+  goTo(p.x, p.spotY);
+}
+function updatePlayer(dt){
+  player.anim += dt;
+  player.bob = Math.sin(player.anim * 9) * (player.state === 'walking' ? 2.2 : 1.1);
+
+  if(player.path.length > 0){
+    const wp = player.path[0];
+    const dx = wp.x - player.x, dy = wp.y - player.y;
+    const d = Math.hypot(dx, dy);
+    const step = 125 * dt;
+    if(d <= step || d < 0.6){
+      player.x = wp.x; player.y = wp.y;
+      player.path.shift();
+      if(player.path.length === 0){
+        player.state = state.sleeping ? 'sleeping' : 'working';
+        player.timer = state.sleeping ? 9999 : 2.6;
+      }
+    } else {
+      player.x += dx/d * step;
+      player.y += dy/d * step;
+      if(Math.abs(dx) > 1) player.dir = dx > 0 ? 1 : -1;
+    }
+  } else {
+    player.timer -= dt;
+    if(player.timer <= 0){
+      if(player.state === 'working'){
+        const bonus = Math.max(1, baseIncome() * 4);
+        state.coins += bonus;
+        state.totalEarned += bonus;
+        spawnParticle(player.x, player.y - 34, '+'+fmt(bonus), '#ffd75e');
+      }
+      pickTarget();
+      if(player.path.length === 0 && player.state !== 'sleeping') player.timer = 1.2;
+    }
+  }
+}
+
+/* =========================================================
+   РАБОЧИЕ — умный random walk с расталкиванием
+   ========================================================= */
+const MAX_WORKER_SPRITES = 40;
+const workerSprites = [];
+
+class WorkerSprite {
+  constructor(type){
+    this.type = type;
+    this.x = 80 + Math.random() * (WORLD_W - 160);
+    this.y = 80 + Math.random() * (WORLD_H - 160);
+    this.targetX = this.x;
+    this.targetY = this.y;
+    this.vx = 0;
+    this.vy = 0;
+    this.waitTimer = Math.random() * 2;
+    this.anim = Math.random() * 10;
+    this.dir = 1;
+    this.homeX = this.x;
+    this.homeY = this.y;
+  }
+
+  pickNewTarget(){
+    // Тяготеет к своему «дому» — 60% случаев рядом, 40% — далеко
+    if(Math.random() < 0.6){
+      const a = Math.random() * Math.PI * 2;
+      const r = 60 + Math.random() * 100;
+      this.targetX = Math.max(50, Math.min(WORLD_W-50, this.homeX + Math.cos(a)*r));
+      this.targetY = Math.max(50, Math.min(WORLD_H-50, this.homeY + Math.sin(a)*r));
+    } else {
+      this.targetX = 60 + Math.random() * (WORLD_W - 120);
+      this.targetY = 60 + Math.random() * (WORLD_H - 120);
+    }
+    this.waitTimer = 0.2 + Math.random() * 1.0;
+  }
+
+  update(dt, all){
+    const dx = this.targetX - this.x;
+    const dy = this.targetY - this.y;
+    const dist = Math.hypot(dx, dy);
+
+    if(dist < 6 && this.waitTimer <= 0){
+      this.pickNewTarget();
+    }
+    if(this.waitTimer > 0) this.waitTimer -= dt;
+
+    // Плавное движение к цели
+    const desiredSpeed = 52;
+    let dvx = 0, dvy = 0;
+    if(dist > 6){
+      dvx = dx / dist * desiredSpeed;
+      dvy = dy / dist * desiredSpeed;
+    }
+    const lerpK = 3.0;
+    this.vx += (dvx - this.vx) * lerpK * dt;
+    this.vy += (dvy - this.vy) * lerpK * dt;
+
+    // Расталкивание с соседями
+    const MIN_D = 28;
+    for(const o of all){
+      if(o === this) continue;
+      const ox = this.x - o.x;
+      const oy = this.y - o.y;
+      const od = Math.hypot(ox, oy);
+      if(od < MIN_D && od > 0.001){
+        const push = (MIN_D - od) / MIN_D;
+        this.vx += (ox/od) * push * 220 * dt;
+        this.vy += (oy/od) * push * 220 * dt;
+      }
+    }
+
+    // Ограничение скорости
+    const sp = Math.hypot(this.vx, this.vy);
+    const MAX = 70;
+    if(sp > MAX){
+      this.vx = this.vx / sp * MAX;
+      this.vy = this.vy / sp * MAX;
+    }
+
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+
+    // Отражение от границ
+    const m = 38;
+    if(this.x < m){ this.x = m; this.vx = Math.abs(this.vx)*0.7; }
+    if(this.x > WORLD_W-m){ this.x = WORLD_W-m; this.vx = -Math.abs(this.vx)*0.7; }
+    if(this.y < m){ this.y = m; this.vy = Math.abs(this.vy)*0.7; }
+    if(this.y > WORLD_H-m){ this.y = WORLD_H-m; this.vy = -Math.abs(this.vy)*0.7; }
+
+    if(Math.abs(this.vx) > 2) this.dir = this.vx > 0 ? 1 : -1;
+    this.anim += dt * (Math.hypot(this.vx, this.vy) / 40 + 0.3);
+  }
+}
+
+function refreshWorkerSprites(){
+  let total = 0;
+  for(const w of WORKERS) total += (state.workers[w.id] || 0);
+  const target = Math.min(total, MAX_WORKER_SPRITES);
+
+  // Строим распределение по типам
+  const types = [];
+  for(const w of WORKERS){
+    const cnt = state.workers[w.id] || 0;
+    for(let i = 0; i < cnt; i++) types.push(w);
+  }
+  // Обрезаем/добираем
+  while(workerSprites.length < target && types.length){
+    const t = types[workerSprites.length % Math.max(1, types.length)];
+    workerSprites.push(new WorkerSprite(t));
+  }
+  while(workerSprites.length > target) workerSprites.pop();
+
+  // Обновляем типы существующих (если изменился состав)
+  for(let i = 0; i < workerSprites.length; i++){
+    if(types[i] && workerSprites[i].type !== types[i]){
+      workerSprites[i].type = types[i];
+    }
+  }
+}
+
+function updateWorkers(dt){
+  for(const w of workerSprites) w.update(dt, workerSprites);
+}
+
+/* =========================================================
+   РЕНДЕР МИРА
+   ========================================================= */
+function drawRoads(){
+  ctx.fillStyle = 'rgba(0,0,0,.10)';
+  ctx.fillRect(0, ROAD_TOP+3, WORLD_W, ROAD_H);
+  ctx.fillStyle = '#c9a26b';
+  ctx.fillRect(0, ROAD_TOP, WORLD_W, ROAD_H);
+  ctx.fillStyle = 'rgba(255,255,255,.12)';
+  ctx.fillRect(0, ROAD_TOP, WORLD_W, 3);
+  ctx.fillStyle = 'rgba(0,0,0,.12)';
+  ctx.fillRect(0, ROAD_BOT-3, WORLD_W, 3);
+
+  // Разметка
+  ctx.fillStyle = 'rgba(255,255,255,.35)';
+  for(let x = 0; x < WORLD_W; x += 60){
+    ctx.fillRect(x, ROAD_CY-1.5, 30, 3);
+  }
+
+  ctx.fillStyle = 'rgba(0,0,0,.09)';
+  for(let i=0;i<90;i++){
+    const x = (i*137.5) % WORLD_W;
+    const y = ROAD_TOP + 6 + ((i*53) % (ROAD_H-12));
+    ctx.beginPath(); ctx.arc(x,y,1.6,0,Math.PI*2); ctx.fill();
+  }
+}
+
+function drawEmptySlots(){
+  const used = totalPlaced();
+  for(let i = 0; i < SLOT_LAYOUT.length; i++){
+    if(i < used) continue;
+    const s = SLOT_LAYOUT[i];
+    const next = (i === used);
+    ctx.save();
+    ctx.setLineDash([6,5]);
+    ctx.lineWidth = next ? 2.4 : 1.4;
+    ctx.strokeStyle = next
+      ? 'rgba(255,255,255,.55)'
+      : 'rgba(255,255,255,.18)';
+    rrect(ctx, s.x - SLOT_W/2, s.y - SLOT_W/2, SLOT_W, SLOT_W, 11);
+    ctx.stroke();
+    ctx.restore();
+    if(next){
+      ctx.font = 'bold 22px system-ui,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(255,255,255,.6)';
+      ctx.fillText('+', s.x, s.y);
+    }
+  }
+}
+
+function drawPlacedBuildings(){
+  const list = placedBuildings();
+  // Сортируем по y, чтобы нижние рисовались поверх
+  list.sort((a,b) => a.y - b.y);
+  for(const p of list){
+    const b = p.type;
+    const s = SLOT_W, x = p.x, y = p.y;
+
+    // Дорожка к дороге
+    const dirY = p.y < ROAD_CY ? 1 : -1;
+    const y1 = dirY > 0 ? y + s/2 : ROAD_BOT;
+    const y2 = dirY > 0 ? ROAD_TOP : y - s/2;
+    ctx.fillStyle = '#bf9760';
+    ctx.fillRect(x-13, Math.min(y1,y2), 26, Math.abs(y2-y1));
+
+    // Тень
+    ctx.fillStyle = 'rgba(0,0,0,.28)';
+    rrect(ctx, x-s/2+3, y-s/2+5, s, s, 12); ctx.fill();
+
+    // Корпус
+    const g = ctx.createLinearGradient(x, y-s/2, x, y+s/2);
+    g.addColorStop(0, b.color);
+    g.addColorStop(1, shade(b.color, -30));
+    ctx.fillStyle = g;
+    rrect(ctx, x-s/2, y-s/2, s, s, 12); ctx.fill();
+
+    ctx.strokeStyle = 'rgba(0,0,0,.32)'; ctx.lineWidth = 2;
+    rrect(ctx, x-s/2, y-s/2, s, s, 12); ctx.stroke();
+
+    // Блик
+    ctx.fillStyle = 'rgba(255,255,255,.15)';
+    rrect(ctx, x-s/2+4, y-s/2+4, s-8, 13, 7); ctx.fill();
+
+    // Иконка
+    ctx.font = '28px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(b.icon, x, y - 2);
+  }
+}
+
+function drawWorkerSprite(w){
+  const x = w.x;
+  const y = w.y + Math.sin(w.anim * 8) * 1.4;
+  const col = w.type.color;
+
+  // Тень
+  ctx.fillStyle = 'rgba(0,0,0,.28)';
+  ctx.beginPath(); ctx.ellipse(x, w.y + 12, 10, 4.5, 0, 0, Math.PI*2); ctx.fill();
+
+  // Тело
+  ctx.fillStyle = col;
+  rrect(ctx, x-7, y-3, 14, 16, 5); ctx.fill();
+
+  // Руки
+  ctx.fillStyle = '#eac086';
+  const swing = Math.sin(w.anim * 8) * 3;
+  ctx.beginPath(); ctx.arc(x-9, y+3+swing, 2.8, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x+9, y+3-swing, 2.8, 0, Math.PI*2); ctx.fill();
+
+  // Голова
+  ctx.fillStyle = '#eac086';
+  ctx.beginPath(); ctx.arc(x, y-9, 7, 0, Math.PI*2); ctx.fill();
+
+  // Глаза
+  ctx.fillStyle = '#1c1c1c';
+  ctx.beginPath(); ctx.arc(x-2.3, y-9, 1.1, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x+2.3, y-9, 1.1, 0, Math.PI*2); ctx.fill();
+
+  // Шляпа
+  ctx.fillStyle = shade(col, -32);
+  ctx.beginPath(); ctx.ellipse(x, y-13, 9.5, 3.4, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x, y-15, 5, Math.PI, 0); ctx.fill();
+}
+
+function drawPlayer(){
+  const x = player.x, y = player.y + player.bob;
+  const sleeping = player.state === 'sleeping';
+
+  ctx.fillStyle = 'rgba(0,0,0,.28)';
+  ctx.beginPath(); ctx.ellipse(x, player.y + 15, 13, 6, 0, 0, Math.PI*2); ctx.fill();
+
+  if(sleeping){
+    ctx.fillStyle = state.vip ? '#c9a227' : '#2e86de';
+    rrect(ctx, x-13, y-6, 26, 18, 9); ctx.fill();
+    ctx.fillStyle = '#f5cba7';
+    ctx.beginPath(); ctx.arc(x+9, y-6, 8, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = state.vip ? '#ffd75e' : '#e1b12c';
+    ctx.beginPath(); ctx.ellipse(x+9, y-11, 12, 4, 0, 0, Math.PI*2); ctx.fill();
+    return;
+  }
+
+  ctx.fillStyle = state.vip ? '#c9a227' : '#2e86de';
+  rrect(ctx, x-9, y-4, 18, 20, 6); ctx.fill();
+  ctx.fillStyle = state.vip ? '#8b6e17' : '#1b5e9e';
+  ctx.fillRect(x-6, y-4, 3, 12);
+  ctx.fillRect(x+3, y-4, 3, 12);
+
+  ctx.fillStyle = '#f5cba7';
+  const swing = Math.sin(player.anim*9) * (player.state === 'walking' ? 4 : 1.5);
+  ctx.beginPath(); ctx.arc(x-11, y+3+swing, 3.4, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x+11, y+3-swing, 3.4, 0, Math.PI*2); ctx.fill();
+
+  ctx.fillStyle = '#f5cba7';
+  ctx.beginPath(); ctx.arc(x, y-11, 9, 0, Math.PI*2); ctx.fill();
+
+  ctx.fillStyle = '#243447';
+  ctx.beginPath(); ctx.arc(x-3.2, y-11, 1.4, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x+3.2, y-11, 1.4, 0, Math.PI*2); ctx.fill();
+
+  ctx.fillStyle = state.vip ? '#ffd75e' : '#e1b12c';
+  ctx.beginPath(); ctx.ellipse(x, y-16, 14, 4.5, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x, y-19, 7.5, Math.PI, 0); ctx.fill();
+  ctx.fillStyle = '#c9a227';
+  ctx.fillRect(x-7.5, y-19, 15, 3);
+
+  if(state.vip){
+    ctx.font = '15px serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('👑', x, y - 31);
+  }
+}
+
+function drawParticles(){
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for(const p of particles){
+    const a = Math.min(1, p.life / p.max * 1.5);
+    ctx.globalAlpha = a;
+    ctx.font = 'bold 16px system-ui,sans-serif';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(0,0,0,.7)';
+    ctx.strokeText(p.text, p.x, p.y);
+    ctx.fillStyle = p.color;
+    ctx.fillText(p.text, p.x, p.y);
+    ctx.globalAlpha = 1;
+  }
+}
+
+function drawSleepZ(){
+  const t = performance.now() / 1000;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = 'bold 17px system-ui,sans-serif';
+  for(let i=0;i<3;i++){
+    const ph = (t*0.75 + i*0.33) % 1;
+    const a = Math.sin(ph*Math.PI);
+    ctx.globalAlpha = a * 0.9;
+    ctx.fillStyle = state.vip ? '#ffe27a' : '#c8d6ff';
+    ctx.fillText('z', player.x + 16 + ph*24, player.y - 26 - ph*34);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawNight(){
+  ctx.fillStyle = 'rgba(8,14,42,.55)';
+  ctx.fillRect(0,0,vw,vh);
+  ctx.fillStyle = 'rgba(255,255,255,.85)';
+  for(let i=0;i<48;i++){
+    const sx = ((i*97.3) % vw);
+    const sy = ((i*53.7) % (vh*0.6));
+    const tw = 0.5 + 0.5*Math.sin(performance.now()/620 + i);
+    ctx.globalAlpha = tw * 0.85;
+    ctx.beginPath(); ctx.arc(sx, sy, 1.4, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.font = '46px serif';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'top';
+  ctx.globalAlpha = .9;
+  ctx.fillText('🌙', vw - 26, 22);
+  ctx.globalAlpha = 1;
+}
+
+function render(){
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,vw,vh);
+
+  const bg = ctx.createRadialGradient(vw/2, vh/2, 40, vw/2, vh/2, Math.max(vw,vh)*0.8);
+  bg.addColorStop(0,'#131a26'); bg.addColorStop(1,'#080b11');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0,0,vw,vh);
+
+  ctx.save();
+  ctx.translate(offX, offY);
+  ctx.scale(scale, scale);
+
+  ctx.drawImage(ground, 0, 0);
+  drawRoads();
+  drawEmptySlots();
+  drawPlacedBuildings();
+
+  // Игрок + рабочие сортируются по Y
+  const entities = [{y: player.y, draw: drawPlayer}];
+  for(const w of workerSprites){
+    entities.push({y: w.y, draw: () => drawWorkerSprite(w)});
+  }
+  entities.sort((a,b) => a.y - b.y);
+  for(const e of entities) e.draw();
+
+  drawParticles();
+  if(player.state === 'sleeping') drawSleepZ();
+
+  ctx.restore();
+
+  if(state.sleeping) drawNight();
+}
+
+/* =========================================================
+   UI
+   ========================================================= */
+const elCoins    = document.getElementById('coins');
+const elCps      = document.getElementById('cps');
+const btnSleep   = document.getElementById('btnSleep');
+const btnFs      = document.getElementById('btnFs');
+const btnLang    = document.getElementById('btnLang');
+const btnReset   = document.getElementById('btnReset');
+const startScr   = document.getElementById('startScreen');
+const playBtn    = document.getElementById('playBtn');
+const content    = document.getElementById('content');
+const secBuild   = document.getElementById('secBuild');
+const secWork    = document.getElementById('secWork');
+const secVip     = document.getElementById('secVip');
+const tabBuild   = document.getElementById('tabBuild');
+const tabWork    = document.getElementById('tabWork');
+const tabVip     = document.getElementById('tabVip');
+
+const domRefs = { build:{}, work:{} };
+let refVipItemName, refVipItemDesc, refVipItemBtn;
+let refFreeSlots;
+
+/* ---------- построение DOM ---------- */
+function buildShopUI(){
+  // Постройки
+  secBuild.innerHTML = '';
+  const hintBar = document.createElement('div');
+  hintBar.className = 'hintbar';
+  hintBar.innerHTML = '<span id="slotsInfo"></span>';
+  secBuild.appendChild(hintBar);
+  refFreeSlots = hintBar.querySelector('#slotsInfo');
+
+  for(const b of BUILDINGS){
+    const el = document.createElement('div');
+    el.className = 'item';
+    el.dataset.type = 'build';
+    el.dataset.id   = b.id;
+    el.innerHTML =
+      '<div class="ic">' + b.icon + '</div>' +
+      '<div class="mid">' +
+        '<div class="nm"><span data-role="name"></span><span class="cnt" data-role="cnt">0</span></div>' +
+        '<div class="st" data-role="stat"></div>' +
+      '</div>' +
+      '<button class="buy" data-role="buy" data-act="buy-build" data-id="' + b.id + '"></button>';
+    secBuild.appendChild(el);
+    domRefs.build[b.id] = {
+      root: el,
+      name: el.querySelector('[data-role="name"]'),
+      cnt:  el.querySelector('[data-role="cnt"]'),
+      stat: el.querySelector('[data-role="stat"]'),
+      buy:  el.querySelector('[data-role="buy"]')
+    };
+  }
+
+  // Рабочие
+  secWork.innerHTML = '';
+  const hintBar2 = document.createElement('div');
+  hintBar2.className = 'hintbar';
+  hintBar2.id = 'workerHint';
+  secWork.appendChild(hintBar2);
+
+  for(const w of WORKERS){
+    const el = document.createElement('div');
+    el.className = 'item';
+    el.dataset.type = 'work';
+    el.dataset.id   = w.id;
+    el.innerHTML =
+      '<div class="ic">' + w.icon + '</div>' +
+      '<div class="mid">' +
+        '<div class="nm"><span data-role="name"></span><span class="cnt" data-role="cnt">0</span></div>' +
+        '<div class="st" data-role="stat"></div>' +
+      '</div>' +
+      '<button class="buy" data-role="buy" data-act="hire-work" data-id="' + w.id + '"></button>';
+    secWork.appendChild(el);
+    domRefs.work[w.id] = {
+      root: el,
+      name: el.querySelector('[data-role="name"]'),
+      cnt:  el.querySelector('[data-role="cnt"]'),
+      stat: el.querySelector('[data-role="stat"]'),
+      buy:  el.querySelector('[data-role="buy"]')
+    };
+  }
+
+  // VIP
+  secVip.innerHTML = '';
+  const vipItem = document.createElement('div');
+  vipItem.className = 'item vipitem can';
+  vipItem.innerHTML =
+    '<div class="ic" style="font-size:30px">👑</div>' +
+    '<div class="mid">' +
+      '<div class="nm" id="vipItemName"></div>' +
+      '<div class="st" id="vipItemDesc"></div>' +
+    '</div>' +
+    '<button class="buy vip" data-act="open-vip" id="vipItemBtn"></button>';
+  secVip.appendChild(vipItem);
+  refVipItemName = vipItem.querySelector('#vipItemName');
+  refVipItemDesc = vipItem.querySelector('#vipItemDesc');
+  refVipItemBtn  = vipItem.querySelector('#vipItemBtn');
+
+  const bonusBox = document.createElement('div');
+  bonusBox.style.cssText =
+    'padding:6px 4px 2px;font-size:12px;color:#7d8590;line-height:1.9';
+  bonusBox.innerHTML =
+    '<div style="font-weight:800;color:#ffd75e;margin-bottom:8px;font-size:13px">' +
+    '<span id="vipBonusTitle"></span></div>' +
+    '<div id="vipBonusItems"></div>';
+  secVip.appendChild(bonusBox);
+}
+
+/* ---------- обновление ---------- */
+function updateShopUI(){
+  // Постройки
+  const fs = freeSlots();
+  if(refFreeSlots){
+    refFreeSlots.innerHTML = T('freeSlots') + ': <b>' + fs + '</b> / ' +
+      SLOT_LAYOUT.length +
+      (fs === 0 ? ' · <span style="color:#ff7b72">' + T('noSlots') + '</span>' : '');
+  }
+
+  for(const b of BUILDINGS){
+    const r = domRefs.build[b.id];
+    if(!r) continue;
+    const cnt = state.buildings[b.id] || 0;
+    const cost = costOfBuilding(b);
+    const can = state.coins >= cost && fs > 0;
+
+    r.name.textContent = TB(b.id);
+    r.cnt.textContent = cnt;
+    if(cnt > 0){
+      r.stat.innerHTML =
+        '<b>+' + fmt(b.income * cnt) + T('perSec') + '</b> · ' +
+        '<span style="color:#8b949e">+' + fmt(b.income) + ' ' + T('each') + '</span>';
+    } else {
+      r.stat.innerHTML = '<span style="color:#8b949e">+' + fmt(b.income) + T('perSec') + '</span>';
+    }
+    r.buy.textContent = fmt(cost);
+    r.buy.classList.toggle('afford', can);
+    r.root.classList.toggle('can', can);
+    r.root.classList.toggle('locked', cnt === 0 && !can);
+  }
+
+  // Рабочие
+  const wHint = document.getElementById('workerHint');
+  if(wHint){
+    let totalW = 0;
+    for(const w of WORKERS) totalW += (state.workers[w.id] || 0);
+    wHint.innerHTML = '👷 ' + T('placed') + ': <b>' + totalW + '</b> · ' +
+      Math.min(totalW, MAX_WORKER_SPRITES) + ' / ' + MAX_WORKER_SPRITES + ' 🎨';
+  }
+
+  for(const w of WORKERS){
+    const r = domRefs.work[w.id];
+    if(!r) continue;
+    const cnt = state.workers[w.id] || 0;
+    const cost = costOfWorker(w);
+    const can = state.coins >= cost;
+
+    r.name.textContent = TW(w.id);
+    r.cnt.textContent = cnt;
+    if(cnt > 0){
+      r.stat.innerHTML =
+        '<b>+' + fmt(w.income * cnt) + T('perSec') + '</b> · ' +
+        '<span style="color:#8b949e">+' + fmt(w.income) + ' ' + T('each') + '</span>';
+    } else {
+      r.stat.innerHTML = '<span style="color:#8b949e">+' + fmt(w.income) + T('perSec') + '</span>';
+    }
+    r.buy.textContent = fmt(cost);
+    r.buy.classList.toggle('afford', can);
+    r.root.classList.toggle('can', can);
+    r.root.classList.toggle('locked', cnt === 0 && !can);
+  }
+
+  // VIP
+  if(refVipItemName){
+    if(state.vip){
+      refVipItemName.textContent = 'VIP';
+      refVipItemDesc.textContent = T('vipAlready');
+      refVipItemBtn.textContent  = '✓';
+      refVipItemBtn.disabled     = true;
+    } else {
+      refVipItemName.textContent = T('vipTitle').replace('👑 ','');
+      refVipItemDesc.textContent = 'x5 · x10 · x3 · 🎁+5';
+      refVipItemBtn.textContent  = '1$';
+      refVipItemBtn.disabled     = false;
+    }
+  }
+  const vipBonusTitle = document.getElementById('vipBonusTitle');
+  if(vipBonusTitle) vipBonusTitle.textContent = T('tabVip') + ' ' + T('vipTitle').replace('👑 ','');
+  const vipBonusItems = document.getElementById('vipBonusItems');
+  if(vipBonusItems){
+    const list = [T('b1'),T('b2'),T('b3'),T('b4'),T('b5'),T('b6')];
+    vipBonusItems.innerHTML = list.map(s =>
+      '<div style="display:flex;gap:8px;color:#c9d1d9;font-size:12px;padding:3px 0">' +
+      s + '</div>'
+    ).join('');
+  }
+}
+
+function updateHUD(){
+  const badge = state.vip ? '<span class="vipbadge">VIP</span>' : '';
+  elCoins.innerHTML = fmt(state.coins) + badge;
+  elCps.textContent = fmt(incomePerSec()) + ' ' + T('perSec');
+}
+
+function updateSleepBtn(){
+  if(state.sleeping){
+    btnSleep.textContent = '☀️';
+    btnSleep.classList.add('on');
+    btnSleep.title = T('wake');
+  } else {
+    btnSleep.textContent = '😴';
+    btnSleep.classList.remove('on');
+    btnSleep.title = T('sleep');
+  }
+}
+
+/* ---------- язык ---------- */
+function applyLang(l){
+  LANG = l;
+  state.lang = l;
+  btnLang.textContent = l.toUpperCase();
+  document.documentElement.lang = l;
+
+  document.querySelectorAll('#langButtons button').forEach(b=>{
+    b.classList.toggle('sel', b.dataset.lang === l);
+  });
+
+  document.getElementById('startSub').textContent = T('sub');
+  document.getElementById('startHint').innerHTML  = T('hint');
+  playBtn.textContent = T('play');
+
+  document.getElementById('offTitle').textContent = T('offlineTitle');
+  document.getElementById('offDesc').textContent  = T('offlineDesc');
+  document.getElementById('offBtn').textContent   = T('collect');
+  btnReset.textContent = T('reset');
+
+  document.getElementById('vipTitle').textContent   = T('vipTitle');
+  document.getElementById('vipDesc').textContent    = T('vipDesc');
+  document.getElementById('vipPrice').innerHTML     = T('vipPrice');
+  document.getElementById('vipOpenTxt').textContent = T('vipOpen');
+  document.getElementById('vipActTxt').textContent  = T('vipAct');
+  document.getElementById('vipCode').placeholder    = T('vipCodePh');
+  document.getElementById('vipOkTitle').textContent = T('vipOkTitle');
+  document.getElementById('vipOkDesc').textContent  = T('vipOkDesc');
+  document.getElementById('vipOkBtn').textContent   = T('vipOkBtn');
+
+  document.getElementById('vipOkList').innerHTML =
+    [T('b1'),T('b2'),T('b3'),T('b4'),T('b5'),T('b6')]
+      .map(s => '<div><span class="em">✓</span><span>' + s + '</span></div>').join('');
+
+  updateSleepBtn();
+  updateShopUI();
+  updateHUD();
+}
+
+/* ---------- табы ---------- */
+function switchTab(name){
+  document.querySelectorAll('.tabs button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.tab === name);
+  });
+  secBuild.classList.toggle('active', name === 'build');
+  secWork.classList.toggle('active',  name === 'work');
+  secVip.classList.toggle('active',   name === 'vip');
+}
+tabBuild.addEventListener('click', ()=> switchTab('build'));
+tabWork .addEventListener('click', ()=> switchTab('work'));
+tabVip  .addEventListener('click', ()=> switchTab('vip'));
+
+/* ---------- кнопки ---------- */
+btnSleep.addEventListener('click', ()=>{
+  state.sleeping = !state.sleeping;
+  updateSleepBtn();
+  player.path = [];
+  player.timer = 0;
+  if(state.sleeping){
+    const p = placedBuildings().find(p => p.type.id === 'house');
+    if(p) goTo(p.x, p.spotY);
+  }
+  save();
+});
+
+btnLang.addEventListener('click', ()=>{
+  const order = ['ru','en','zh'];
+  const i = order.indexOf(LANG);
+  applyLang(order[(i+1) % order.length]);
+  save();
+});
+
+btnFs.addEventListener('click', toggleFs);
+
+btnReset.addEventListener('click', ()=>{
+  if(confirm(T('resetConfirm'))){
+    try { localStorage.removeItem(SAVE_KEY); } catch(e){}
+    state = freshState();
+    state.lang = LANG;
+    particles.length = 0;
+    workerSprites.length = 0;
+    player.path = [];
+    player.timer = 0;
+    player.x = SLOT_LAYOUT[0].x;
+    player.y = SLOT_LAYOUT[0].y + 40;
+    document.body.classList.remove('vip');
+    updateSleepBtn();
+    updateShopUI();
+    updateHUD();
+    save();
+  }
+});
+
+/* ---------- делегирование кликов магазина ---------- */
+content.addEventListener('click', function(e){
+  const btn = e.target.closest('button[data-act]');
+  if(!btn) return;
+  const act = btn.dataset.act;
+  const id  = btn.dataset.id;
+  if(act === 'buy-build')       tryBuyBuilding(id, btn);
+  else if(act === 'hire-work')  tryHireWorker(id, btn);
+  else if(act === 'open-vip')   openVipModal();
+});
+
+function flashShake(el){
+  if(!el) return;
+  el.classList.remove('shake');
+  void el.offsetWidth;
+  el.classList.add('shake');
+  setTimeout(()=> el.classList.remove('shake'), 340);
+}
+
+function tryBuyBuilding(id, btn){
+  const b = BMAP[id];
+  if(!b) return;
+  if(freeSlots() <= 0){
+    flashShake(btn.closest('.item'));
+    return;
+  }
+  const cost = costOfBuilding(b);
+  if(state.coins < cost){
+    flashShake(btn.closest('.item'));
+    return;
+  }
+  state.coins -= cost;
+  state.buildings[id] = (state.buildings[id] || 0) + 1;
+
+  // Найти позицию нового здания и показать партикл
+  const placed = placedBuildings();
+  const newP = placed[placed.length - 1];
+  if(newP) spawnParticle(newP.x, newP.y - 30, '🏗 ' + TB(id), '#3fb950');
+  spawnParticleOnDOM(btn.closest('.item'), '⬆ ' + TB(id), '#3fb950');
+
+  save();
+  updateShopUI();
+  updateHUD();
+}
+
+function tryHireWorker(id, btn){
+  const w = WMAP[id];
+  if(!w) return;
+  const cost = costOfWorker(w);
+  if(state.coins < cost){
+    flashShake(btn.closest('.item'));
+    return;
+  }
+  state.coins -= cost;
+  state.workers[id] = (state.workers[id] || 0) + 1;
+
+  spawnParticle(player.x, player.y - 40, '👷 +1', '#ffd75e');
+  spawnParticleOnDOM(btn.closest('.item'), '👷 +1', '#ffd75e');
+
+  refreshWorkerSprites();
+  save();
+  updateShopUI();
+  updateHUD();
+}
+
+function spawnParticleOnDOM(el, text, color){
+  if(!el) return;
+  const rect = el.getBoundingClientRect();
+  const p = document.createElement('div');
+  p.textContent = text;
+  p.style.cssText =
+    'position:fixed;pointer-events:none;z-index:70;font-weight:800;font-size:13px;' +
+    'color:' + color + ';text-shadow:0 1px 4px #000;transition:transform .9s ease-out,opacity .9s;' +
+    'left:' + (rect.left + rect.width - 90) + 'px;' +
+    'top:' + (rect.top + rect.height/2 - 10) + 'px';
+  document.body.appendChild(p);
+  requestAnimationFrame(()=>{
+    p.style.transform = 'translateY(-34px)';
+    p.style.opacity = '0';
+  });
+  setTimeout(()=> p.remove(), 950);
+}
+
+/* =========================================================
+   VIP
+   ========================================================= */
+const vipModal   = document.getElementById('vipModal');
+const vipOkModal = document.getElementById('vipOkModal');
+const vipCode    = document.getElementById('vipCode');
+const vipMsg     = document.getElementById('vipMsg');
+
+function openVipModal(){
+  if(state.vip){ showVipOk(); return; }
+  vipMsg.textContent = '';
+  vipMsg.className = 'msg';
+  vipCode.value = '';
+  vipModal.classList.add('show');
+  setTimeout(()=> vipCode.focus(), 260);
+}
+document.getElementById('vipClose').addEventListener('click', ()=>{
+  vipModal.classList.remove('show');
+});
+vipModal.addEventListener('click', e=>{
+  if(e.target === vipModal) vipModal.classList.remove('show');
+});
+document.getElementById('vipOpen').addEventListener('click', ()=>{
+  window.open(VIP_LINK, '_blank', 'noopener');
+});
+document.getElementById('vipActivate').addEventListener('click', activateVipCode);
+vipCode.addEventListener('keydown', e=>{
+  if(e.key === 'Enter') activateVipCode();
+});
+vipCode.addEventListener('input', ()=>{
+  vipCode.value = vipCode.value.replace(/[^0-9]/g,'').slice(0,12);
+});
+
+function activateVipCode(){
+  const code = (vipCode.value || '').trim();
+  if(code === VIP_CODE){
+    if(state.vip){
+      vipMsg.textContent = T('vipAlready');
+      vipMsg.className = 'msg ok';
+      return;
+    }
+    state.vip = true;
+    document.body.classList.add('vip');
+    grantVipBonuses();
+    save();
+    vipMsg.textContent = '✅';
+    vipMsg.className = 'msg ok';
+    setTimeout(()=>{
+      vipModal.classList.remove('show');
+      showVipOk();
+    }, 400);
+  } else {
+    vipMsg.textContent = T('vipErr');
+    vipMsg.className = 'msg err';
+    vipCode.value = '';
+    vipCode.focus();
+  }
+}
+
+function grantVipBonuses(){
+  // +5 рабочих каждого типа
+  for(const w of WORKERS){
+    state.workers[w.id] = (state.workers[w.id] || 0) + 5;
+  }
+  refreshWorkerSprites();
+  updateShopUI();
+  updateHUD();
+}
+
+function showVipOk(){
+  vipOkModal.classList.add('show');
+}
+document.getElementById('vipOkBtn').addEventListener('click', ()=>{
+  vipOkModal.classList.remove('show');
+});
+vipOkModal.addEventListener('click', e=>{
+  if(e.target === vipOkModal) vipOkModal.classList.remove('show');
+});
+
+/* =========================================================
+   FULLSCREEN / КЛИК ПО ПОЛЮ
+   ========================================================= */
+function toggleFs(){
+  try{
+    if(!document.fullscreenElement){
+      const el = document.documentElement;
+      (el.requestFullscreen || el.webkitRequestFullscreen || function(){}).call(el);
+    } else {
+      (document.exitFullscreen || document.webkitExitFullscreen || function(){}).call(document);
+    }
+  }catch(e){}
+}
+document.addEventListener('fullscreenchange', ()=>{
+  btnFs.classList.toggle('on', !!document.fullscreenElement);
+  setTimeout(resize, 60);
+});
+window.addEventListener('keydown', e=>{
+  if(e.key === 'F11'){ e.preventDefault(); toggleFs(); }
+});
+
+cv.addEventListener('pointerdown', e=>{
+  const rect = cv.getBoundingClientRect();
+  const px = (e.clientX - rect.left - offX) / scale;
+  const py = (e.clientY - rect.top  - offY) / scale;
+
+  const power = clickPower();
+  state.coins += power;
+  state.totalEarned += power;
+  spawnParticle(px, py - 10, '+' + fmt(power), state.vip ? '#ffe27a' : '#ffd75e');
+
+  if(player.state !== 'sleeping' && player.path.length === 0 && Math.random() < 0.35){
+    pickTarget();
+  }
+});
+
+/* =========================================================
+   ЦИКЛ
+   ========================================================= */
+let lastT = performance.now();
+let uiAccum = 0;
+let autoSaveAccum = 0;
+
+function loop(now){
+  let dt = (now - lastT) / 1000;
+  lastT = now;
+  if(dt > 0.25) dt = 0.25;
+  if(dt < 0) dt = 0;
+
+  const inc = incomePerSec();
+  state.coins += inc * dt;
+  state.totalEarned += inc * dt;
+
+  updatePlayer(dt);
+  updateWorkers(dt);
+  updateParticles(dt);
+
+  uiAccum += dt;
+  if(uiAccum > 0.12){
+    uiAccum = 0;
+    updateHUD();
+    updateShopUI();
+  }
+
+  autoSaveAccum += dt;
+  if(autoSaveAccum > 10){ autoSaveAccum = 0; save(); }
+
+  render();
+  requestAnimationFrame(loop);
+}
+
+/* =========================================================
+   ИНИЦИАЛИЗАЦИЯ
+   ========================================================= */
+function init(){
+  try{
+    const hadSave = load();
+    LANG = state.lang || 'ru';
+    if(state.vip) document.body.classList.add('vip');
+
+    applyLang(LANG);
+    buildShopUI();
+    updateShopUI();
+    updateSleepBtn();
+    updateHUD();
+    refreshWorkerSprites();
+
+    player.x = SLOT_LAYOUT[0].x;
+    player.y = SLOT_LAYOUT[0].y + 40;
+
+    resize();
+
+    if(hadSave){
+      const elapsed = Math.max(0, (Date.now() - (state.lastSave || Date.now())) / 1000);
+      const capped = Math.min(elapsed, 8 * 3600);
+      let earn = baseIncome() * capped * 0.6;
+      if(state.vip) earn *= 3;
+      if(earn >= 1 && capped > 30) showOffline(earn);
+    }
+
+    requestAnimationFrame(loop);
+  }catch(err){
+    console.error(err);
+    const errDiv = document.createElement('div');
+    errDiv.style.cssText =
+      'position:fixed;bottom:10px;left:10px;right:10px;background:#5c1a1a;color:#fff;' +
+      'padding:10px;border-radius:8px;font-size:12px;z-index:9999;font-family:monospace';
+    errDiv.textContent = 'Init error: ' + (err.message || err);
+    document.body.appendChild(errDiv);
+  }
+}
+
+function showOffline(amount){
+  const modal = document.getElementById('offlineModal');
+  document.getElementById('offAmount').textContent = '+' + fmt(amount) + ' 🪙';
+  modal.classList.add('show');
+  document.getElementById('offBtn').onclick = ()=>{
+    state.coins += amount;
+    state.totalEarned += amount;
+    modal.classList.remove('show');
+    spawnParticle(player.x, player.y - 40, '+' + fmt(amount), '#3fb950');
+    save();
+  };
+}
+
+/* ---------- стартовый экран ---------- */
+document.getElementById('langButtons').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-lang]');
+  if(!btn) return;
+  state.lang = btn.dataset.lang;
+  applyLang(btn.dataset.lang);
+});
+
+playBtn.addEventListener('click', ()=>{
+  toggleFs();
+  startScr.classList.add('hidden');
+
+  const hadSave = !!localStorage.getItem(SAVE_KEY);
+  if(!hadSave){
+    state = freshState();
+    state.lang = LANG;
+    save();
+  }
+
+  setTimeout(resize, 120);
+  setTimeout(resize, 600);
+});
+
+window.addEventListener('beforeunload', save);
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden) save();
+  else lastT = performance.now();
+});
+
+init();
+</script>
+</body>
+</html>
